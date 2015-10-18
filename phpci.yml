@@ -1,0 +1,28 @@
+build_settings:
+    clone_depth: 1 
+# depth of 1 is a shallow clone, remove this line to clone entire repo
+    ignore:
+        - "tests"
+    path: 
+        - "src"
+test:
+    php_mess_detector:
+        allow_failures: true
+        rules:
+            - "cleancode"
+            - "controversial"
+            - "codesize"
+            - "design"
+            - "naming"
+            - "unusedcode"
+    php_code_sniffer:
+        standard: "PSR2,PSR2"
+        encoding: "utf8"
+    php_cpd:
+        allow_failures: true
+    php_loc:
+        directory: "src"
+    php_spec:
+    php_parallel_lint:
+        directory: 
+            - "src"

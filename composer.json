@@ -13,7 +13,14 @@
         "php": ">=5.3.4"
     },
 	"require-dev": {
-        "phpunit/phpunit": "5.0.6"
+        "phpunit/phpunit": "5.0.6",
+		"instaclick/php-code-sniffer" : "1.4.2",
+		"block8/php-docblock-checker" : "1.0.3",
+		"sebastian/phpcpd" : "2.0.2",
+		"phploc/phploc" : "2.1.4",
+		"phpmd/phpmd" : "2.3.2",
+		"jakub-onderka/php-parallel-lint" : "0.9",
+		"phpspec/phpspec" : "2.3.0"
     },
     "autoload": {
         "psr-0": {"JsonRPC": "src/"}
