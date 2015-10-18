@@ -34,7 +34,7 @@ class ServerProtocolTest extends PHPUnit_Framework_TestCase
 
         $this->assertEquals(
             json_decode('{"jsonrpc": "2.0", "result": -19, "id": 1}', true),
-            json_decode($server->execute( $msg), true)
+            json_decode($server->execute( $msg ), true)
         );
     }
 

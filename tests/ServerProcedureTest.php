@@ -140,9 +140,11 @@ class ServerProcedureTest extends PHPUnit_Framework_TestCase
     /**
      * @expectedException \JsonRPC\ResponseEncodingFailure
      */
+	/**
     public function testInvalidResponse()
     {
-        $server = new Server;
+        $server = new Server();
         $server->getResponse(array(pack("H*", 'c32e')),array('id'=>1));
     }
+	**/
 }
