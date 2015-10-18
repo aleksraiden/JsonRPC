@@ -5,6 +5,12 @@ build_settings:
         - "tests"
     path: 
         - "src"
+		
+setup:
+  composer:
+    directory: "/usr/local/bin"
+    action: "update"
+    prefer_dist: true
 test:
 #    php_mess_detector:
 #        allow_failures: true

@@ -12,7 +12,10 @@
     "require": {
         "php": ">=5.3.4"
     },
-	"autoload": {
+	require-dev": {	
+		"phpunit/phpunit": "5.0.6"
+	},
+    "autoload": {
         "psr-0": {"JsonRPC": "src/"}
     }
 }
