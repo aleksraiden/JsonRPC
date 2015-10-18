@@ -2,7 +2,7 @@ build_settings:
     clone_depth: 1 
 # depth of 1 is a shallow clone, remove this line to clone entire repo
     ignore:
-    #    - "tests"
+        - "tests"
     path: 
         - "src"
 test:
@@ -15,15 +15,14 @@ test:
 #            - "design"
 #            - "naming"
 #            - "unusedcode"
-#    php_code_sniffer:
-#        standard: "PSR2,PSR2"
-#        encoding: "utf8"
+    php_code_sniffer:
+        standard: "PSR2,PSR2"
+        encoding: "utf8"
+        path: "src"
     php_cpd:
         allow_failures: true
     php_loc:
-        #directory: "/src"
     lint:
-        #directory: "/src"
     php_unit:
         config: "phpunit.xml"
         path: "tests"
