@@ -15,12 +15,12 @@ test:
 #            - "design"
 #            - "naming"
 #            - "unusedcode"
-    php_code_sniffer:
-        standard: "PSR2,PSR2"
-        encoding: "utf8"
+#    php_code_sniffer:
+#        standard: "PSR2,PSR2"
+#        encoding: "utf8"
     php_cpd:
         allow_failures: true
     php_loc:
-        directory: "src"
+        directory: "/src"
     lint:
-        directory: "src"
+        directory: "/src"
