@@ -24,3 +24,6 @@ test:
         #directory: "/src"
     lint:
         #directory: "/src"
+    php_unit:
+        config: "phpunit.xml"
+        path: "tests"
