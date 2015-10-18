@@ -23,6 +23,6 @@ test:
     php_loc:
         directory: "src"
     php_spec:
-    php_parallel_lint:
+    lint:
         directory: 
             - "src"
