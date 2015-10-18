@@ -17,21 +17,24 @@ class ServerProtocolTest extends PHPUnit_Framework_TestCase
         $subtract = function($minuend, $subtrahend) {
             return $minuend - $subtrahend;
         };
-
-        $server = new Server('{"jsonrpc": "2.0", "method": "subtract", "params": [42, 23], "id": 1}');
+		
+		$msg = new Message( '{"jsonrpc": "2.0", "method": "subtract", "params": [42, 23], "id": 1}' );
+		
+        $server = new Server(); //'{"jsonrpc": "2.0", "method": "subtract", "params": [42, 23], "id": 1}');
         $server->register('subtract', $subtract);
 
         $this->assertEquals(
             json_decode('{"jsonrpc": "2.0", "result": 19, "id": 1}', true),
-            json_decode($server->execute(), true)
+            json_decode($server->execute($msg), true)
         );
 
-        $server = new Server('{"jsonrpc": "2.0", "method": "subtract", "params": [23, 42], "id": 1}');
+        $msg = new Message( '{"jsonrpc": "2.0", "method": "subtract", "params": [23, 42], "id": 1}' );
+		$server = new Server();
         $server->register('subtract', $subtract);
 
         $this->assertEquals(
             json_decode('{"jsonrpc": "2.0", "result": -19, "id": 1}', true),
-            json_decode($server->execute(), true)
+            json_decode($server->execute( $msg), true)
         );
     }
 
