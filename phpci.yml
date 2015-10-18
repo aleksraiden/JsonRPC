@@ -6,15 +6,15 @@ build_settings:
     path: 
         - "src"
 test:
-    php_mess_detector:
-        allow_failures: true
-        rules:
-            - "cleancode"
-            - "controversial"
-            - "codesize"
-            - "design"
-            - "naming"
-            - "unusedcode"
+#    php_mess_detector:
+#        allow_failures: true
+#        rules:
+#            - "cleancode"
+#            - "controversial"
+#            - "codesize"
+#            - "design"
+#            - "naming"
+#            - "unusedcode"
     php_code_sniffer:
         standard: "PSR2,PSR2"
         encoding: "utf8"
@@ -22,7 +22,5 @@ test:
         allow_failures: true
     php_loc:
         directory: "src"
-    php_spec:
     lint:
-        directory: 
-            - "src"
+        directory: "src"
