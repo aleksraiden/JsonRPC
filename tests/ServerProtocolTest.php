@@ -7,7 +7,7 @@ class C
     public function doSomething()
     {
         return 'something';
-    }
+    } 
 }
 
 class ServerProtocolTest extends PHPUnit_Framework_TestCase
