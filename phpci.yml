@@ -7,7 +7,7 @@ build_settings:
         - "src"
 setup:
     composer:
-        directory: "/usr/local/bin"
+#        directory: "/usr/local/bin"
         action: "update"
         prefer_dist: true
 test:
