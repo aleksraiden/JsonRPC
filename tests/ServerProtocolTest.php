@@ -1,6 +1,7 @@
 <?php
 
 use JsonRPC\Server;
+use JsonRPC\Server\Message as Message;
 
 class C
 {
