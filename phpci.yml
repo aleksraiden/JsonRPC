@@ -16,9 +16,13 @@ test:
 #            - "naming"
 #            - "unusedcode"
     php_code_sniffer:
-        standard: "PSR2,PSR2"
+        allowed_warnings: true
+        suffixes : "php"
+        tab_width: 4
+        allowed_errors: true 
+        standard: "PSR2"
         encoding: "utf8"
-        path: "src"
+        path: "src/JsonRPC"
     php_cpd:
         allow_failures: true
     php_loc:
