@@ -16,6 +16,145 @@ class AuthenticationFailure extends Exception {};
 class ResponseEncodingFailure extends Exception {};
 
 /**
+ * JsonRPC rpc message class
+ *
+ * @package JsonRPC
+ * @author  aleks_raiden
+ */
+ class Message {
+	/**
+     * Data received from the client
+     *
+     * @access private
+     * @var array
+     */
+    private $payload = array();
+	
+	public $isBatch = false;
+
+	/**
+     * Constructor
+     *
+     * @access public
+     * @param  string|array    $request
+     */
+    public function __construct($request = '')
+    {
+        if (empty($request))
+			throw new InvalidJsonFormat('Malformed payload');
+		
+		if (is_string($request)){		
+			$this->payload = json_decode($request, true);
+				
+			if(json_last_error() !== JSON_ERROR_NONE)
+				throw new InvalidJsonFormat('Malformed payload');
+		}
+		else
+		if (is_array($request)){
+			$this->payload = $request;
+		}
+			
+		//Test if all required JSON-RPC parameters are here
+		$this->checkRpcFormat();
+
+		if ($this->isBatchRequest() === true)
+			$this->isBatch = true;
+    }
+	
+	/**
+     * Set a payload
+     *
+     * @access public
+     * @param  array   $payload
+     * @return Server
+     */
+    public function setPayload(array $payload)
+    {
+        if (!empty($payload))
+			$this->payload = $payload;
+		else
+			throw new InvalidJsonFormat('Malformed payload');
+    }
+	
+	/**
+     * Get a payload
+     *
+     * @access public
+     * @return payload
+     */
+    public function getPayload()
+    {
+        if (!empty($payload))
+			return $this->payload;
+		else
+			throw new InvalidJsonFormat('Malformed payload');
+    }
+	
+	/**
+     * Get a id
+     *
+     * @access public
+     * @return string
+     */
+    public function getId()
+    {
+        if (($this->isBatch === true) || (empty($this->payload)) || (empty($this->payload['id'])))
+			return null;
+		else
+			return $this->payload['id'];
+    }
+
+    /**
+     * Test if all required JSON-RPC parameters are here
+     *
+     * @access private
+     */
+    private function checkRpcFormat()
+    {
+        if (! isset($this->payload['jsonrpc']) ||
+            ! isset($this->payload['method']) ||
+            ! is_string($this->payload['method']) ||
+            $this->payload['jsonrpc'] !== '2.0' ||
+            (isset($this->payload['params']) && ! is_array($this->payload['params']))) {
+
+            throw new InvalidJsonRpcFormat('Invalid JSON RPC payload');
+        }
+    }
+	
+	 /**
+     * Return true if we have a batch request
+     *
+     * @access public
+     * @return boolean
+     */
+    public function isBatchRequest()
+    {
+        return array_keys($this->payload) === range(0, count($this->payload) - 1);
+    }
+	
+	
+	public function getMethod()
+    {
+        if (($this->isBatch === true) || (empty($this->payload)) || (empty($this->payload['method'])))
+			return null;
+		else
+			return $this->payload['method'];
+    }
+	
+	public function getParams()
+    {
+        if (($this->isBatch === true) || (empty($this->payload)) || (empty($this->payload['params'])))
+			return array();
+		else
+			return $this->payload['params'];
+    }
+	
+ }
+ 
+ 
+
+
+/**
  * JsonRPC server class
  *
  * @package JsonRPC
@@ -23,15 +162,17 @@ class ResponseEncodingFailure extends Exception {};
  */
 class Server
 {
-    /**
-     * Data received from the client
+	/**
+     * Encode responce to string or no
      *
      * @access private
      * @var array
      */
-    private $payload = array();
-
-    /**
+    private $encodedResponce = true;
+	
+	private $useCallProfiler = false; 
+	
+	/**
      * List of procedures
      *
      * @access private
@@ -93,27 +234,18 @@ class Server
      * @access public
      * @param  string    $request
      */
-    public function __construct($request = '')
+    public function __construct($encodedResult = true, $useCallProfiler = false)
     {
-        if ($request !== '') {
-            $this->payload = json_decode($request, true);
-        }
-        else {
-            $this->payload = json_decode(file_get_contents('php://input'), true);
-        }
-    }
-
-    /**
-     * Set a payload
-     *
-     * @access public
-     * @param  array   $payload
-     * @return Server
-     */
-    public function setPayload(array $payload)
-    {
-        $this->payload = $payload;
-    }
+		if ($encodedResult == true)
+			$this->encodedResponce = true;
+		else
+			$this->encodedResponce = false;
+		
+		if ($useCallProfiler == true)
+			$this->useCallProfiler = true;
+		else
+			$this->useCallProfiler = false;
+	}
 
     /**
      * Define alternative authentication header
@@ -297,27 +429,25 @@ class Server
      * @access public
      * @param  array $data Data to send to the client
      * @param  array $payload Incoming data
-     * @return string
+	 * @return string
      * @throws ResponseEncodingFailure
      */
-    public function getResponse(array $data, array $payload = array())
+    public function getResponse(array $data, string $rpcMessageId)
     {
-        if (! array_key_exists('id', $payload)) {
-            return '';
-        }
-
         $response = array(
             'jsonrpc' => '2.0',
-            'id' => $payload['id']
+            'id' => $rpcMessageId
         );
 
         $response = array_merge($response, $data);
-
-        @header('Content-Type: application/json');
-
-        $encodedResponse = json_encode($response);
+		
+		if ($this->encodedResponce === false)
+			return $response;
+		
+		$encodedResponse = json_encode($response);
         $jsonError = json_last_error();
-        if($jsonError !== JSON_ERROR_NONE)
+        
+		if($jsonError !== JSON_ERROR_NONE)
         {
             switch ($jsonError) {
                 case JSON_ERROR_NONE:
@@ -342,49 +472,10 @@ class Server
                     $errorMessage = 'Unknown error';
                     break;
             }
-            throw new ResponseEncodingFailure($errorMessage,$jsonError);
+            throw new ResponseEncodingFailure($errorMessage, $jsonError);
         }
-        return $encodedResponse;
-    }
-
-    /**
-     * Parse the payload and test if the parsed JSON is ok
-     *
-     * @access private
-     */
-    private function checkJsonFormat()
-    {
-        if (! is_array($this->payload)) {
-            throw new InvalidJsonFormat('Malformed payload');
-        }
-    }
-
-    /**
-     * Test if all required JSON-RPC parameters are here
-     *
-     * @access private
-     */
-    private function checkRpcFormat()
-    {
-        if (! isset($this->payload['jsonrpc']) ||
-            ! isset($this->payload['method']) ||
-            ! is_string($this->payload['method']) ||
-            $this->payload['jsonrpc'] !== '2.0' ||
-            (isset($this->payload['params']) && ! is_array($this->payload['params']))) {
-
-            throw new InvalidJsonRpcFormat('Invalid JSON RPC payload');
-        }
-    }
-
-    /**
-     * Return true if we have a batch request
-     *
-     * @access public
-     * @return boolean
-     */
-    private function isBatchRequest()
-    {
-        return array_keys($this->payload) === range(0, count($this->payload) - 1);
+		
+		return $encodedResponse;
     }
 
     /**
@@ -393,31 +484,16 @@ class Server
      * @access private
      * @return string
      */
-    private function handleBatchRequest()
+    private function handleBatchRequest(array $rpcMessages = [])
     {
         $responses = array();
 
-        foreach ($this->payload as $payload) {
+        foreach ($rpcMessages as $rpcMessage) {
 
-            if (! is_array($payload)) {
+            $response = $server->execute($rpcMessage);
 
-                $responses[] = $this->getResponse(array(
-                    'error' => array(
-                        'code' => -32600,
-                        'message' => 'Invalid Request'
-                    )),
-                    array('id' => null)
-                );
-            }
-            else {
-
-                $server = clone($this);
-                $server->setPayload($payload);
-                $response = $server->execute();
-
-                if (! empty($response)) {
-                    $responses[] = $response;
-                }
+            if (! empty($response)) {
+                $responses[] = $response;
             }
         }
 
@@ -426,28 +502,44 @@ class Server
 
     /**
      * Parse incoming requests
-     *
+     * 
+	 * @param Message $rpcMessage  Instance of Message class 
      * @access public
      * @return string
      */
-    public function execute()
+    public function execute( Message $rpcMessage)
     {
-        try {
-
-            $this->checkJsonFormat();
-
-            if ($this->isBatchRequest()){
-                return $this->handleBatchRequest();
+        if ($this->encodedResponce === true)
+			header('Content-type: application/json', true);
+		
+		try {
+			if ($rpcMessage->isBatch === true){
+                $rpsMessages = array();
+				
+				$payloads = $rpcMessage->getPayload();
+				
+				foreach($payloads as $msg){
+					$rpsMessages[] = new Message( $msg );
+				}
+				
+				if (count($rpsMessages) > 0)				
+					return $this->handleBatchRequest( $rpsMessages );
+				else
+					throw new Exception('Bad batch request');
             }
+			
+			//$payload = $rpcMessage->getPayload();
+			
+			if ($this->useCallProfiler === true)
+				$ts = microtime( true );
 
-            $this->checkRpcFormat();
+            $result = $this->executeProcedure($rpcMessage->getMethod(), $rpcMessage->getParams());
+			
+			//Time per call (mcs)
+			if ($this->useCallProfiler === true)
+				$tpc = microtime( true ) - $ts;
 
-            $result = $this->executeProcedure(
-                $this->payload['method'],
-                empty($this->payload['params']) ? array() : $this->payload['params']
-            );
-
-            return $this->getResponse(array('result' => $result), $this->payload);
+            return $this->getResponse(array('result' => $result, 'tpc' => $tpc), $rpcMessage->getId());
         }
         catch (InvalidJsonFormat $e) {
 
@@ -476,7 +568,7 @@ class Server
                     'code' => -32601,
                     'message' => 'Method not found'
                 )),
-                $this->payload
+                $rpcMessage->getId()
             );
         }
         catch (InvalidArgumentException $e) {
@@ -486,7 +578,7 @@ class Server
                     'code' => -32602,
                     'message' => 'Invalid params'
                 )),
-                $this->payload
+                $rpcMessage->getId()
             );
         }
         catch(ResponseEncodingFailure $e){
@@ -496,7 +588,7 @@ class Server
                     'message' => 'Internal error',
                     'data' => $e->getMessage()
                 )),
-                $this->payload
+                $rpcMessage->getId()
             );
         }
         catch (AuthenticationFailure $e) {
@@ -512,7 +604,7 @@ class Server
                     'message' => $e->getMessage(),
                     'data' => $e->getData(),
                 )),
-                $this->payload
+                $rpcMessage->getId()
             );
         }
         catch (Exception $e) {
@@ -524,7 +616,7 @@ class Server
                             'code' => $e->getCode(),
                             'message' => $e->getMessage()
                         )),
-                        $this->payload
+                        $rpcMessage->getId()
                     );
                 }
             }
